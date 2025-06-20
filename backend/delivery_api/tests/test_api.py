@@ -8,7 +8,13 @@ from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 class DeliveryAPITest(APITestCase):
+    """
+    Тесты API для CRUD операций с доставками, проверки авторизации, ошибок и загрузки файлов.
+    """
     def setUp(self):
+        """
+        Создание тестового пользователя и справочников для тестов доставки.
+        """
         self.user = get_user_model().objects.create_user(username='testuser', password='testpass')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -19,6 +25,9 @@ class DeliveryAPITest(APITestCase):
         self.cargo = CargoType.objects.create(name='Мед. товары')
 
     def test_create_delivery(self):
+        """
+        Проверяет успешное создание доставки через API.
+        """
         url = reverse('delivery-list')
         data = {
             "transport_model": self.transport.id,
@@ -37,12 +46,18 @@ class DeliveryAPITest(APITestCase):
         self.assertEqual(response.data['transport_number'], 'V01-123')
 
     def test_list_deliveries_requires_auth(self):
+        """
+        Проверяет, что список доставок требует авторизации.
+        """
         self.client.logout()
         url = reverse('delivery-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
 
     def test_update_delivery(self):
+        """
+        Проверяет обновление доставки (PATCH).
+        """
         url = reverse('delivery-list')
         data = {
             "transport_model": self.transport.id,
@@ -66,6 +81,9 @@ class DeliveryAPITest(APITestCase):
         self.assertEqual(response.data['tech_state'], 'broken')
 
     def test_delete_delivery(self):
+        """
+        Проверяет удаление доставки через API.
+        """
         url = reverse('delivery-list')
         data = {
             "transport_model": self.transport.id,
@@ -86,6 +104,9 @@ class DeliveryAPITest(APITestCase):
         self.assertEqual(response.status_code, 204)
 
     def test_invalid_delivery_dates(self):
+        """
+        Проверяет обработку некорректных дат (прибытие раньше отправки).
+        """
         url = reverse('delivery-list')
         data = {
             "transport_model": self.transport.id,
@@ -104,6 +125,9 @@ class DeliveryAPITest(APITestCase):
         self.assertIn(response.status_code, [201, 400])
 
     def test_create_delivery_with_invalid_ids(self):
+        """
+        Проверяет ошибку при несуществующих ID справочников.
+        """
         url = reverse('delivery-list')
         data = {
             "transport_model": 999,
@@ -121,12 +145,18 @@ class DeliveryAPITest(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_create_delivery_without_required_fields(self):
+        """
+        Проверяет ошибку при отсутствии обязательных полей.
+        """
         url = reverse('delivery-list')
         data = {}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 400)
 
     def test_create_delivery_with_media_file(self):
+        """
+        Проверяет загрузку медиафайла при создании доставки.
+        """
         url = reverse('delivery-list')
         file = SimpleUploadedFile('test.pdf', b'file_content', content_type='application/pdf')
         data = {

@@ -6,7 +6,13 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 class DeliveryModelTest(TestCase):
+    """
+    Тесты модели Delivery: создание, связи со справочниками, корректность полей.
+    """
     def setUp(self):
+        """
+        Создание тестовых справочников для использования в тестах Delivery.
+        """
         self.transport = TransportModel.objects.create(name='V01')
         self.package = PackageType.objects.create(name='Коробка')
         self.service = Service.objects.create(name='До клиента')
@@ -14,6 +20,9 @@ class DeliveryModelTest(TestCase):
         self.cargo = CargoType.objects.create(name='Мед. товары')
 
     def test_create_delivery(self):
+        """
+        Проверяет создание доставки и корректность связей со справочниками.
+        """
         delivery = Delivery.objects.create(
             transport_model=self.transport,
             transport_number='V01-123',

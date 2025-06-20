@@ -1,9 +1,10 @@
 from django.db import models
 
-# Create your models here.
-
+# Модели справочников для доставки
 class TransportModel(models.Model):
-    """Модель транспорта (например: V01, X20, REX и т.д.)"""
+    """
+    Модель транспорта (например: V01, X20, REX и т.д.)
+    """
     name = models.CharField('Модель', max_length=50, unique=True)
 
     class Meta:
@@ -14,7 +15,9 @@ class TransportModel(models.Model):
         return self.name
 
 class PackageType(models.Model):
-    """Тип упаковки (например: Пакет до 1 кг, Коробка и т.д.)"""
+    """
+    Тип упаковки (например: Пакет до 1 кг, Коробка и т.д.)
+    """
     name = models.CharField('Тип упаковки', max_length=50, unique=True)
 
     class Meta:
@@ -25,7 +28,9 @@ class PackageType(models.Model):
         return self.name
 
 class Service(models.Model):
-    """Услуга (например: До клиента, Хрупкий груз и т.д.)"""
+    """
+    Услуга (например: До клиента, Хрупкий груз и т.д.)
+    """
     name = models.CharField('Услуга', max_length=50, unique=True)
 
     class Meta:
@@ -36,7 +41,9 @@ class Service(models.Model):
         return self.name
 
 class DeliveryStatus(models.Model):
-    """Статус доставки (например: В ожидании, Проведено)"""
+    """
+    Статус доставки (например: В ожидании, Проведено)
+    """
     name = models.CharField('Статус', max_length=30, unique=True)
 
     class Meta:
@@ -47,7 +54,9 @@ class DeliveryStatus(models.Model):
         return self.name
 
 class CargoType(models.Model):
-    """Тип груза (опционально)"""
+    """
+    Тип груза (опционально)
+    """
     name = models.CharField('Тип груза', max_length=50, unique=True)
 
     class Meta:
