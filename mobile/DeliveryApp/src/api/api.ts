@@ -1,9 +1,12 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Укажите IP вашего компьютера, чтобы эмулятор мог достучаться до локального сервера
-// На Windows можно узнать командой ipconfig в терминале
-const API_BASE_URL = 'http://192.168.1.66:8000/api/'; // ЗАМЕНЕН НА ВАШ IP
+// Используем localhost для разработки
+// Для эмулятора Android можно использовать 10.0.2.2 вместо localhost
+// Для физического устройства нужно будет указать IP компьютера
+const API_BASE_URL = __DEV__ 
+  ? 'http://10.0.2.2:8081/api/' // Для Android эмулятора
+  : 'http://localhost:8081/api/'; // Для iOS симулятора
 
 const api = axios.create({
   baseURL: API_BASE_URL,
