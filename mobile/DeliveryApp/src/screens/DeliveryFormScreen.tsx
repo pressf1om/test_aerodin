@@ -6,6 +6,7 @@ import { getDeliveryFormData, DeliveryFormData, createDelivery, updateDelivery }
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ReferenceItem } from '../types/types';
+import * as DocumentPicker from 'expo-document-picker';
 
 // Определяем типы для навигации
 type RootStackParamList = {
@@ -142,6 +143,8 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [mediaFile, setMediaFile] = useState<{ uri: string; name: string; mimeType: string } | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -192,35 +195,56 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   };
 
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setMediaFile({
+          uri: file.uri,
+          name: file.name,
+          mimeType: file.mimeType || 'application/octet-stream',
+        });
+      }
+    } catch (e) {
+      Alert.alert('Ошибка', 'Не удалось выбрать файл.');
+    }
+  };
+
   const handleSave = async () => {
-    // Простая валидация
     if (!transportModelId || !transportNumber || !distance || !statusId || !packageTypeId) {
       Alert.alert('Ошибка', 'Пожалуйста, заполните все обязательные поля.');
       return;
     }
-
     setIsSaving(true);
-
-    const deliveryData = {
-      transport_model: transportModelId,
-      transport_number: transportNumber,
-      departure_time: departureTime.toISOString(),
-      arrival_time: arrivalTime.toISOString(),
-      distance_km: distance,
-      services: selectedServices,
-      status: statusId,
-      package_type: packageTypeId,
-      tech_state: techState,
-      cargo_type: cargoTypeId,
-    };
-
     try {
-      if (deliveryId) {
-        await updateDelivery(deliveryId, deliveryData);
-      } else {
-        await createDelivery(deliveryData);
+      const formData = new FormData();
+      formData.append('transport_model', String(transportModelId));
+      formData.append('transport_number', transportNumber);
+      formData.append('departure_time', departureTime.toISOString());
+      formData.append('arrival_time', arrivalTime.toISOString());
+      formData.append('distance_km', distance);
+      selectedServices.forEach((id: number) => formData.append('services', String(id)));
+      formData.append('status', String(statusId));
+      formData.append('package_type', String(packageTypeId));
+      formData.append('tech_state', techState);
+      if (cargoTypeId) formData.append('cargo_type', String(cargoTypeId));
+      if (mediaFile) {
+        formData.append('media_file', {
+          uri: mediaFile.uri,
+          name: mediaFile.name,
+          type: mediaFile.mimeType,
+        } as any);
       }
-      // Возвращаемся на предыдущий экран после успешного сохранения
+      if (deliveryId) {
+        await updateDelivery(deliveryId, formData, true);
+      } else {
+        await createDelivery(formData, true);
+      }
       navigation.goBack();
     } catch (error) {
       console.error('Failed to save delivery', error);
@@ -325,6 +349,15 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
           selectedValue={cargoTypeId}
           onSelect={setCargoTypeId}
         />
+        
+        <Button
+          mode="outlined"
+          onPress={handlePickFile}
+          style={{ marginBottom: 12 }}
+          icon="attachment"
+        >
+          {mediaFile ? `Файл: ${mediaFile.name}` : 'Загрузить файл (PDF, фото)'}
+        </Button>
         
         <Button 
           mode="contained" 

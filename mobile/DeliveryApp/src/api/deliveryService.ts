@@ -93,9 +93,11 @@ export const getDeliveryFormData = async (deliveryId?: number): Promise<Delivery
  * Создает новую доставку.
  * @param data - Данные из формы.
  */
-export const createDelivery = async (data: DeliveryFormValues): Promise<Delivery> => {
+export const createDelivery = async (data: DeliveryFormValues | FormData, isFormData = false): Promise<Delivery> => {
     try {
-        const response = await api.post('deliveries/', data);
+        const response = await api.post('deliveries/', data, isFormData ? {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        } : undefined);
         return response.data;
     } catch (error) {
         console.error('Failed to create delivery', error);
@@ -108,9 +110,11 @@ export const createDelivery = async (data: DeliveryFormValues): Promise<Delivery
  * @param id - ID доставки.
  * @param data - Данные из формы.
  */
-export const updateDelivery = async (id: number, data: DeliveryFormValues): Promise<Delivery> => {
+export const updateDelivery = async (id: number, data: DeliveryFormValues | FormData, isFormData = false): Promise<Delivery> => {
     try {
-        const response = await api.put(`deliveries/${id}/`, data);
+        const response = await api.put(`deliveries/${id}/`, data, isFormData ? {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        } : undefined);
         return response.data;
     } catch (error) {
         console.error(`Failed to update delivery ${id}`, error);
