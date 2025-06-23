@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Appbar, Button, Chip, Menu, SegmentedButtons, Text, TextInput, TouchableRipple, useTheme } from 'react-native-paper';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { getDeliveryFormData, DeliveryFormData, createDelivery, updateDelivery } from '../api/deliveryService';
+import { getDeliveryFormData, DeliveryFormData, createDelivery, updateDelivery, conductDelivery, deleteDelivery } from '../api/deliveryService';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ReferenceItem } from '../types/types';
@@ -145,6 +145,11 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [mediaFile, setMediaFile] = useState<{ uri: string; name: string; mimeType: string } | null>(null);
 
+  const [isConducting, setIsConducting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [conductStatusId, setConductStatusId] = useState<number | undefined>();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -160,6 +165,10 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
           deliveryStatuses: data.deliveryStatuses,
           cargoTypes: data.cargoTypes,
         });
+
+        // Найти id статуса "Доставлено"
+        const delivered = data.deliveryStatuses?.find(s => s.name === 'Доставлено');
+        setConductStatusId(delivered?.id);
 
         // Затем, если это редактирование, устанавливаем значения для полей
         if (data.delivery) {
@@ -254,6 +263,39 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
+  const handleConduct = async () => {
+    if (!deliveryId || !conductStatusId) return;
+    setIsConducting(true);
+    try {
+      await conductDelivery(deliveryId, conductStatusId);
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось провести доставку.');
+    } finally {
+      setIsConducting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deliveryId) return;
+    Alert.alert('Удалить доставку?', 'Вы уверены, что хотите удалить эту доставку?', [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Удалить', style: 'destructive', onPress: async () => {
+          setIsDeleting(true);
+          try {
+            await deleteDelivery(deliveryId);
+            navigation.goBack();
+          } catch (error) {
+            Alert.alert('Ошибка', 'Не удалось удалить доставку.');
+          } finally {
+            setIsDeleting(false);
+          }
+        }
+      }
+    ]);
+  };
+
   if (loading) {
     return <ActivityIndicator animating={true} size="large" style={styles.loader} />;
   }
@@ -266,7 +308,7 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
     <>
       <Appbar.Header>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title={deliveryId ? 'Редактировать' : 'Новая доставка'} />
+        <Appbar.Content title={deliveryId ? `№${deliveryId}` : 'Новая доставка'} />
       </Appbar.Header>
       <ScrollView style={styles.container}>
         <Dropdown
@@ -368,6 +410,31 @@ const DeliveryFormScreen: React.FC<Props> = ({ route, navigation }) => {
         >
           {isSaving ? 'Сохранение...' : 'Сохранить'}
         </Button>
+        {deliveryId && (
+          <Button
+            mode="contained"
+            onPress={handleConduct}
+            style={[styles.button, { backgroundColor: '#388E3C' }]}
+            loading={isConducting}
+            disabled={isConducting}
+            icon="check"
+          >
+            Провести
+          </Button>
+        )}
+        {deliveryId && (
+          <Button
+            mode="outlined"
+            onPress={handleDelete}
+            style={[styles.button, { borderColor: '#B00020' }]}
+            loading={isDeleting}
+            disabled={isDeleting}
+            textColor="#B00020"
+            icon="delete"
+          >
+            Удалить
+          </Button>
+        )}
       </ScrollView>
     </>
   );

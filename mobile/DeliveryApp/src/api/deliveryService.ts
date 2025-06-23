@@ -122,4 +122,29 @@ export const updateDelivery = async (id: number, data: DeliveryFormValues | Form
     }
 };
 
+/**
+ * Переводит доставку в указанный статус
+ */
+export const conductDelivery = async (id: number, statusId: number): Promise<Delivery> => {
+  try {
+    const response = await api.patch(`deliveries/${id}/`, { status: statusId });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to conduct delivery', error);
+    throw error;
+  }
+};
+
+/**
+ * Удаляет доставку
+ */
+export const deleteDelivery = async (id: number): Promise<void> => {
+  try {
+    await api.delete(`deliveries/${id}/`);
+  } catch (error) {
+    console.error('Failed to delete delivery', error);
+    throw error;
+  }
+};
+
 // ... Можно добавить функции для создания, обновления, удаления 

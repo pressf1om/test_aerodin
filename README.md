@@ -9,9 +9,8 @@
 5. [Mobile (React Native)](#mobile-react-native)
 6. [Инструкция по запуску](#инструкция-по-запуску)
 7. [Docker](#docker)
-8. [Тесты](#тесты)
-9. [Полезные команды](#полезные-команды)
-10. [Контакты и поддержка](#контакты-и-поддержка)
+8. [Полезные команды](#полезные-команды)
+9. [Production deploy (VPS, Docker Compose)](#production-deploy-vps-docker-compose)
 
 ---
 
@@ -46,7 +45,6 @@ test_aerodin/
 │   ├── Dockerfile     # Docker-образ frontend
 │   ├── nginx.conf     # Конфиг nginx для frontend
 │   ├── package.json   # JS-зависимости
-│   └── README.md      # Документация по frontend
 │
 ├── mobile/DeliveryApp/ # Мобильное приложение (React Native)
 │   ├── src/           # Исходный код (screens, components, api, context, theme, types)
@@ -150,7 +148,6 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
-- Django Admin: http://localhost:8000/admin
 
 ### 2. Frontend
 
@@ -159,7 +156,6 @@ cd frontend
 npm install
 npm run dev
 ```
-- Веб-приложение: http://localhost:5173
 
 ### 3. Mobile
 
@@ -168,7 +164,6 @@ cd mobile/DeliveryApp
 npm install
 npx expo start
 ```
-- Откройте приложение через Expo Go или соберите APK.
 
 ---
 
@@ -185,28 +180,41 @@ docker-compose up --build
 
 ---
 
-## Тесты
+## Production deploy (VPS, Docker Compose)
 
-### Backend
-
-```sh
-cd backend
-pytest
-```
-
-### Frontend
-
-```sh
-cd frontend
-npm test
-```
-
-### Mobile
-
-```sh
-cd mobile/DeliveryApp
-npm test
-```
+1. Установите Docker и docker-compose на сервер (Ubuntu/Debian):
+   ```sh
+   sudo apt update
+   sudo apt install -y docker.io docker-compose
+   sudo usermod -aG docker $USER
+   # Перезайдите в сессию или выполните: newgrp docker
+   ```
+2. Клонируйте проект:
+   ```sh
+   git clone <URL_ВАШЕГО_РЕПО>
+   cd <имя_проекта>
+   ```
+3. Создайте файл .env на основе .env.example:
+   ```sh
+   cp .env.example .env
+   # Отредактируйте SECRET_KEY и другие параметры при необходимости
+   ```
+4. Запустите проект:
+   ```sh
+   docker-compose up --build -d
+   ```
+5. Проверьте логи (если нужно):
+   ```sh
+   docker-compose logs -f
+   ```
+6. Создайте суперпользователя Django (один раз):
+   ```sh
+   docker-compose exec backend python manage.py createsuperuser + миграции
+   ```
+7. Откройте в браузере:
+   - Backend: http://<IP_СЕРВЕРА>:8000
+   - Frontend: http://<IP_СЕРВЕРА>:8080
+   - Django admin: http://<IP_СЕРВЕРА>:8000/admin
 
 ---
 
@@ -216,13 +224,6 @@ npm test
   `python backend/create_test_data.py`
 - **Сменить пароль пользователя:**  
   `python backend/set_password.py`
-
----
-
-## Контакты и поддержка
-
-- Вопросы по проекту — в Telegram HR (см. ТЗ)
-- Для багов и предложений — создавайте issue или pull request
 
 ---
 
